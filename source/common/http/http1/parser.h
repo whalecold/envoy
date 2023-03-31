@@ -31,6 +31,8 @@ enum class CallbackResult {
   // Returned by onHeadersComplete() to indicate that the parser should not
   // expect either a body or any further data on the connection.
   NoBodyData = 2,
+  //use for llhttp
+  Paused=21,
 };
 
 class ParserCallbacks {
@@ -140,6 +142,10 @@ public:
 
   // Returns the number of bytes in the body. absl::nullopt if no Content-Length header
   virtual absl::optional<uint64_t> contentLength() const PURE;
+
+  // Indicated that Content-Length header is present. This is used to differentiate between an unset
+  // Content-Length and a 0 value.
+  virtual void setHasContentLength(bool val) PURE;
 
   // Returns whether headers are chunked.
   virtual bool isChunked() const PURE;

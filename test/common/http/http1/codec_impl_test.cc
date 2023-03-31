@@ -44,12 +44,18 @@ namespace {
 
 // See https://github.com/envoyproxy/envoy/issues/21245.
 enum class ParserImpl {
-  HttpParser, // http-parser from node.js
-  BalsaParser // Balsa from QUICHE
+  HttpParser,  // http-parser from node.js
+  BalsaParser, // Balsa from QUICHE
+  LlhttpParser // llhttp
 };
 
 std::string testParamToString(const ::testing::TestParamInfo<ParserImpl>& info) {
-  return info.param == ParserImpl::HttpParser ? "HttpParser" : "BalsaParser";
+  if (info.param == ParserImpl::HttpParser) {
+    return "HttpParser";
+  } else if (info.param == ParserImpl::LlhttpParser) {
+    return "LlhttpParser";
+  }
+  return "BalsaParser";
 }
 
 std::string createHeaderFragment(int num_headers) {
@@ -87,9 +93,14 @@ protected:
 
   void SetUp() override {
     if (parser_impl_ == ParserImpl::BalsaParser) {
-      scoped_runtime_.mergeValues({{"envoy.reloadable_features.http1_use_balsa_parser", "true"}});
+      scoped_runtime_.mergeValues({{"envoy.reloadable_features.http1_use_balsa_parser", "true"},
+                                   {"envoy.reloadable_features.enable_llhttp_parser", "false"}});
+    } else if (parser_impl_ == ParserImpl::LlhttpParser) {
+      scoped_runtime_.mergeValues({{"envoy.reloadable_features.http1_use_balsa_parser", "false"},
+                                   {"envoy.reloadable_features.enable_llhttp_parser", "true"}});
     } else {
-      scoped_runtime_.mergeValues({{"envoy.reloadable_features.http1_use_balsa_parser", "false"}});
+      scoped_runtime_.mergeValues({{"envoy.reloadable_features.http1_use_balsa_parser", "false"},
+                                   {"envoy.reloadable_features.enable_llhttp_parser", "false"}});
     }
   }
 
@@ -448,7 +459,8 @@ void Http1ServerConnectionImplTest::testServerAllowChunkedContentLength(uint32_t
 }
 
 INSTANTIATE_TEST_SUITE_P(Parsers, Http1ServerConnectionImplTest,
-                         ::testing::Values(ParserImpl::HttpParser, ParserImpl::BalsaParser),
+                         ::testing::Values(ParserImpl::HttpParser, ParserImpl::BalsaParser,
+                                           ParserImpl::LlhttpParser),
                          testParamToString);
 
 TEST_P(Http1ServerConnectionImplTest, EmptyHeader) {
@@ -1015,7 +1027,7 @@ TEST_P(Http1ServerConnectionImplTest, Http11InvalidTrailerPost) {
 }
 
 TEST_P(Http1ServerConnectionImplTest, Http11InvalidTrailersIgnored) {
-  if (parser_impl_ == ParserImpl::HttpParser) {
+  if (parser_impl_ == ParserImpl::HttpParser || parser_impl_ == ParserImpl::LlhttpParser) {
     // HttpParser signals error even if `enable_trailers_` is false.
     return;
   }
@@ -1283,8 +1295,13 @@ TEST_P(Http1ServerConnectionImplTest, HeaderInvalidCharsRejection) {
   EXPECT_CALL(decoder, sendLocalReply(_, _, _, _, _));
   auto status = codec_->dispatch(buffer);
   EXPECT_TRUE(isCodecProtocolError(status));
-  EXPECT_EQ(status.message(), "http/1.1 protocol error: header value contains invalid chars");
-  EXPECT_EQ("http1.invalid_characters", response_encoder->getStream().responseDetails());
+  if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.enable_llhttp_parser")) {
+    EXPECT_EQ(status.message(), "http/1.1 protocol error: HPE_INVALID_HEADER_TOKEN");
+    EXPECT_EQ("http1.codec_error", response_encoder->getStream().responseDetails());
+  } else {
+    EXPECT_EQ(status.message(), "http/1.1 protocol error: header value contains invalid chars");
+    EXPECT_EQ("http1.invalid_characters", response_encoder->getStream().responseDetails());
+  }
 }
 
 // Ensures that request headers with names containing the underscore character are allowed
@@ -1437,16 +1454,12 @@ TEST_P(Http1ServerConnectionImplTest, TrailerMutateEmbeddedNul) {
 // ASSERTs should validate we never have any embedded CR or LF.
 TEST_P(Http1ServerConnectionImplTest, HeaderMutateEmbeddedCRLF) {
   const std::string example_input = "GET / HTTP/1.1\r\nHOST: h.com\r\nfoo: barbaz\r\n";
-
   for (const char c : {'\r', '\n'}) {
     for (size_t n = 1; n < example_input.size(); ++n) {
       initialize();
-
       InSequence sequence;
-
       NiceMock<MockRequestDecoder> decoder;
       EXPECT_CALL(callbacks_, newStream(_, _)).WillOnce(ReturnRef(decoder));
-
       Buffer::OwnedImpl buffer(
           absl::StrCat(example_input.substr(0, n), std::string(1, c), example_input.substr(n)));
       // May or may not cause an error status, but should never trip on a debug ASSERT.
@@ -2378,9 +2391,9 @@ void Http1ClientConnectionImplTest::testClientAllowChunkedContentLength(
   };
 #endif
 }
-
 INSTANTIATE_TEST_SUITE_P(Parsers, Http1ClientConnectionImplTest,
-                         ::testing::Values(ParserImpl::HttpParser, ParserImpl::BalsaParser),
+                         ::testing::Values(ParserImpl::HttpParser, ParserImpl::BalsaParser,
+                                           ParserImpl::LlhttpParser),
                          testParamToString);
 
 TEST_P(Http1ClientConnectionImplTest, SimpleGet) {

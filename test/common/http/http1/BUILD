@@ -15,11 +15,7 @@ envoy_cc_test(
         "//source/common/http/http1:header_formatter_lib",
     ],
 )
-
-envoy_cc_test(
-    name = "codec_impl_test",
-    srcs = ["codec_impl_test.cc"],
-    deps = [
+CODEC_DEPS=[
         "//envoy/buffer:buffer_interface",
         "//envoy/event:dispatcher_interface",
         "//source/common/buffer:buffer_lib",
@@ -41,7 +37,18 @@ envoy_cc_test(
         "//test/test_common:logging_lib",
         "//test/test_common:test_runtime_lib",
         "@envoy_api//envoy/extensions/http/header_validators/envoy_default/v3:pkg_cc_proto",
-    ],
+]
+
+envoy_cc_test(
+    name = "codec_impl_test",
+    srcs = ["codec_impl_test.cc"],
+    deps = CODEC_DEPS,
+)
+
+envoy_cc_test(
+    name = "llhttp_parser_impl_test",
+    srcs = ["llhttp_parser_impl_test.cc"],
+    deps = CODEC_DEPS,
 )
 
 envoy_cc_test(

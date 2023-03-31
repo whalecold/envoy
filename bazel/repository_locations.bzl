@@ -759,6 +759,18 @@ REPOSITORY_LOCATIONS_SPEC = dict(
         license = "Apache-2.0",
         license_url = "https://github.com/google/jwt_verify_lib/blob/{version}/LICENSE",
     ),
+    com_github_nodejs_llhttp = dict(
+        project_name = "llhttp",
+        project_desc = "Parser for HTTP messages written in C",
+        project_url = "https://github.com/nodejs/llhttp",
+        version = "8.1.0",
+        sha256 = "9da0d23453e8e242cf3b2bc5d6fb70b1517b8a70520065fcbad6be787e86638e",
+        strip_prefix = "llhttp-release-v{version}",
+        urls = ["https://github.com/nodejs/llhttp/archive/release/v{version}.tar.gz"],
+        use_category = ["dataplane_core"],
+        release_date = "2022-10-11",
+        cpe = "cpe:2.3:a:nodejs:node.js:*",
+    ),
     com_github_alibaba_hessian2_codec = dict(
         project_name = "hessian2-codec",
         project_desc = "hessian2-codec is a C++ library for hessian2 codec",

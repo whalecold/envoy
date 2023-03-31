@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.listener.mse.v3;
+
+import "udpa/annotations/status.proto";
+import "udpa/annotations/versioning.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.filters.listener.mse.v3";
+option java_outer_classname = "MseProto";
+option java_multiple_files = true;
+option go_package = "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/mse/v3;msev3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: Mse Filter]
+// Detect whether the application protocol is HTTP.
+// [#extension: envoy.filters.listener.mse]
+
+message Mse {
+  option (udpa.annotations.versioning).previous_message_type =
+      "envoy.config.filter.listener.mse.v2.Mse";
+}

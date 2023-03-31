@@ -22,6 +22,7 @@
 #include "source/common/http/http1/balsa_parser.h"
 #include "source/common/http/http1/header_formatter.h"
 #include "source/common/http/http1/legacy_parser_impl.h"
+#include "source/common/http/http1/llhttp_parser_impl.h"
 #include "source/common/http/utility.h"
 #include "source/common/runtime/runtime_features.h"
 
@@ -510,7 +511,10 @@ ConnectionImpl::ConnectionImpl(Network::Connection& connection, CodecStats& stat
       processing_trailers_(false), handling_upgrade_(false), reset_stream_called_(false),
       deferred_end_stream_headers_(false), dispatching_(false), max_headers_kb_(max_headers_kb),
       max_headers_count_(max_headers_count) {
-  if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.http1_use_balsa_parser")) {
+  if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.enable_llhttp_parser")) {
+    ENVOY_CONN_LOG(info, "use llhttp parser for codec", connection_);
+    parser_ = std::make_unique<LlhttpHttpParserImpl>(type, this);
+  } else if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.http1_use_balsa_parser")) {
     parser_ = std::make_unique<BalsaParser>(type, this, max_headers_kb_ * 1024, enableTrailers());
   } else {
     parser_ = std::make_unique<LegacyHttpParserImpl>(type, this);
@@ -903,6 +907,8 @@ StatusOr<CallbackResult> ConnectionImpl::onHeadersCompleteImpl() {
       return codecProtocolError("http/1.1 protocol error: unsupported transfer encoding");
     }
   }
+  // Setting HasContentLength for llhttp parser
+  parser_->setHasContentLength(request_or_response_headers.ContentLength() != nullptr);
 
   auto statusor = onHeadersCompleteBase();
   if (!statusor.ok()) {

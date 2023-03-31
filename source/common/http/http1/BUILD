@@ -36,6 +36,7 @@ envoy_cc_library(
         ":codec_stats_lib",
         ":header_formatter_lib",
         ":legacy_parser_lib",
+        ":llhttp_parser_lib",
         ":parser_interface",
         "//envoy/buffer:buffer_interface",
         "//envoy/common:scope_tracker_interface",
@@ -130,5 +131,16 @@ envoy_cc_library(
         "@com_github_google_quiche//:quiche_balsa_balsa_frame_lib",
         "@com_github_google_quiche//:quiche_balsa_balsa_headers_lib",
         "@com_github_google_quiche//:quiche_balsa_balsa_visitor_interface_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "llhttp_parser_lib",
+    srcs = ["llhttp_parser_impl.cc"],
+    hdrs = ["llhttp_parser_impl.h"],
+    external_deps = ["llhttp"],
+    deps = [
+        ":parser_interface",
+        "//source/common/common:assert_lib",
     ],
 )
