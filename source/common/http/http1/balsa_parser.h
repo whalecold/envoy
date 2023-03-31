@@ -28,6 +28,7 @@ public:
   uint16_t statusCode() const override;
   bool isHttp11() const override;
   absl::optional<uint64_t> contentLength() const override;
+  void setHasContentLength(bool) override{};
   bool isChunked() const override;
   absl::string_view methodName() const override;
   absl::string_view errorMessage() const override;

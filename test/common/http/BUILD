@@ -427,10 +427,7 @@ envoy_cc_test(
     ],
 )
 
-envoy_cc_test(
-    name = "mixed_conn_pool_test",
-    srcs = ["mixed_conn_pool_test.cc"],
-    deps = [
+MIXED_CONN_POOL_TEST=[
         ":common_lib",
         "//source/common/http:mixed_conn_pool",
         "//test/common/upstream:utility_lib",
@@ -444,8 +441,21 @@ envoy_cc_test(
         "//test/mocks/runtime:runtime_mocks",
         "//test/mocks/stats:stats_mocks",
         "//test/test_common:test_runtime_lib",
-    ],
+]
+
+envoy_cc_test(
+    name = "mixed_conn_pool_test",
+    srcs = ["mixed_conn_pool_test.cc"],
+    args = ["--runtime-feature-disable-for-tests=envoy.reloadable_features.enable_llhttp_parser"],
+    deps = MIXED_CONN_POOL_TEST,
 )
+
+envoy_cc_test(
+    name = "llhttp_mixed_conn_pool_test",
+    srcs = ["mixed_conn_pool_test.cc"],
+    deps = MIXED_CONN_POOL_TEST,
+)
+
 
 envoy_cc_test(
     name = "conn_pool_grid_test",

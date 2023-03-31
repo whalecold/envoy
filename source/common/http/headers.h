@@ -225,6 +225,8 @@ public:
   const LowerCaseString XContentTypeOptions{"x-content-type-options"};
   const LowerCaseString XSquashDebug{"x-squash-debug"};
   const LowerCaseString EarlyData{"early-data"};
+  const LowerCaseString MseOriginalDstHost{"x-mse-original-dst-host"};
+
 
   struct {
     const std::string Close{"close"};

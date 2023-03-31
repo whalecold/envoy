@@ -455,6 +455,13 @@ envoy.filters.http.stateful_session:
   type_urls:
   - envoy.extensions.filters.http.stateful_session.v3.StatefulSession
   - envoy.extensions.filters.http.stateful_session.v3.StatefulSessionPerRoute
+envoy.filters.listener.mse:
+  categories:
+  - envoy.filters.listener
+  security_posture: requires_trusted_downstream_and_upstream
+  status: stable
+  type_urls:
+  - envoy.extensions.filters.listener.mse.v3.Mse
 envoy.filters.listener.http_inspector:
   categories:
   - envoy.filters.listener
