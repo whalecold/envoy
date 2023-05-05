@@ -214,6 +214,19 @@ TEST_F(OriginalDstClusterTest, NoContext) {
     HostConstSharedPtr host = lb.chooseHost(&lb_context);
     EXPECT_EQ(host, nullptr);
   }
+
+  // No host for anyaddress
+  {
+  NiceMock<Network::MockConnection> connection;
+  TestLoadBalancerContext lb_context(&connection);
+  connection.stream_info_.downstream_connection_info_provider_->restoreLocalAddress(
+      std::make_shared<Network::Address::Ipv4Instance>("0.0.0.0"));
+
+  OriginalDstCluster::LoadBalancer lb(cluster_);
+  EXPECT_CALL(server_context_.dispatcher_, post(_)).Times(0);
+  HostConstSharedPtr host = lb.chooseHost(&lb_context);
+  EXPECT_EQ(host, nullptr);
+  }
 }
 
 TEST_F(OriginalDstClusterTest, AddressCollision) {
