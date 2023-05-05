@@ -57,6 +57,10 @@ HostConstSharedPtr OriginalDstCluster::LoadBalancer::chooseHost(LoadBalancerCont
       // Add a new host
       const Network::Address::Ip* dst_ip = dst_addr.ip();
       if (dst_ip) {
+        if (dst_ip->isAnyAddress()){
+          ENVOY_LOG(warn, "original_dst_load_balancer: Can not create host for INADDR_ANY.");
+          return nullptr;
+        }
         Network::Address::InstanceConstSharedPtr host_ip_port(
             Network::Utility::copyInternetAddressAndPort(*dst_ip));
         // Create a host we can use immediately.
