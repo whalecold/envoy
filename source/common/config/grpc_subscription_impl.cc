@@ -32,6 +32,7 @@ GrpcSubscriptionImpl::GrpcSubscriptionImpl(GrpcMuxSharedPtr grpc_mux,
 void GrpcSubscriptionImpl::start(const absl::flat_hash_set<std::string>& resources) {
   if (init_fetch_timeout_.count() > 0) {
     init_fetch_timeout_timer_ = dispatcher_.createTimer([this]() -> void {
+      ENVOY_LOG(warn, "grpc subscription impl onConfigUpdateFailed url {} resources", type_url_);
       onConfigUpdateFailed(Envoy::Config::ConfigUpdateFailureReason::FetchTimedout, nullptr);
     });
     init_fetch_timeout_timer_->enableTimer(init_fetch_timeout_);

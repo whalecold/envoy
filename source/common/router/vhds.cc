@@ -37,14 +37,14 @@ VhdsSubscription::VhdsSubscription(
                          {config_update_info_->protobufConfigurationCast().name()});
                    }),
       route_config_provider_opt_(route_config_provider_opt) {
-  //const auto& config_source = config_update_info_->protobufConfigurationCast()
-  //                                .vhds()
-  //                                .config_source()
-  //                                .api_config_source()
-  //                                .api_type();
-  //if (config_source != envoy::config::core::v3::ApiConfigSource::DELTA_GRPC) {
-  //  throw EnvoyException("vhds: only 'DELTA_GRPC' is supported as an api_type.");
-  //}
+  // const auto& config_source = config_update_info_->protobufConfigurationCast()
+  //                                 .vhds()
+  //                                 .config_source()
+  //                                 .api_config_source()
+  //                                 .api_type();
+  // if (config_source != envoy::config::core::v3::ApiConfigSource::DELTA_GRPC) {
+  //   throw EnvoyException("vhds: only 'DELTA_GRPC' is supported as an api_type.");
+  // }
   const auto resource_name = getResourceName();
   Envoy::Config::SubscriptionOptions options;
   options.use_namespace_matching_ = true;
@@ -60,6 +60,7 @@ void VhdsSubscription::updateOnDemand(const std::string& with_route_config_name_
 
 void VhdsSubscription::onConfigUpdateFailed(Envoy::Config::ConfigUpdateFailureReason reason,
                                             const EnvoyException*) {
+  ENVOY_LOG(warn, "vhds onConfigUpdateFailed {}", reason);
   ASSERT(Envoy::Config::ConfigUpdateFailureReason::ConnectionFailure != reason);
   // We need to allow server startup to continue, even if we have a bad
   // config.
